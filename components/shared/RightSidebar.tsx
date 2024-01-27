@@ -1,5 +1,5 @@
 function RightSidebar() {
-    return <h1>RightSidebar</h1>
+    return   <section className='custom-scrollbar rightsidebar'>RightSidebar</section>
 };
 
 export default RightSidebar;

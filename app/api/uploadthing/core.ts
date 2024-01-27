@@ -14,20 +14,27 @@ export const ourFileRouter = {
   media: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     // Set permissions and file types for this FileRoute
     .middleware(async (req) => {
-      // This code runs on your server before upload
-      const user = await getUser();
-
-      // If you throw, the user will not be able to upload
-      if (!user) throw new Error("Unauthorized");
-
-      // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user.id };
-    })
+      try {
+         const user = await getUser();
+   
+         if (!user) {
+            // Handle unauthorized user
+            throw new Error("Unauthorized");
+         }
+   
+         return { userId: user.id };
+      } catch (error) {
+         // Handle other errors
+         console.error("Error in middleware:", error);
+         throw new Error("Internal Server Error");
+      }
+   })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
       console.log("Upload complete for userId:", metadata.userId);
 
       console.log("file url", file.url);
+      return { uploadedBy: metadata.userId };
     }),
 } satisfies FileRouter;
 
