@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { fetchUser } from "@/lib/actions/user.actions";
 import AccountProfile from "@/components/forms/AccountProfile";
 
-export const maxDuration = 300;
+export const maxDuration = 10;
 
 async function Page() {
   const user = await currentUser();
