@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { ReloadIcon } from "@radix-ui/react-icons"
+ 
 import {
   Form,
   FormControl,
@@ -40,9 +41,10 @@ interface Props {
 const AccountProfile = ({ user, btnTitle }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { startUpload } = useUploadThing("media");
+  const { startUpload } = useUploadThing("imageUploader");
 
   const [files, setFiles] = useState<File[]>([]);
+  const [isSubmitLoading, setIsSubmitLoading] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof UserValidation>>({
     resolver: zodResolver(UserValidation),
@@ -55,30 +57,38 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
   });
 
   const onSubmit = async (values: z.infer<typeof UserValidation>) => {
-    const blob = values.profile_photo;
-
-    const hasImageChanged = isBase64Image(blob);
-
-    if (hasImageChanged) {
-      const imgRes = await startUpload(files);
-      // if (imgRes && imgRes[0].fileUrl) { 
-      //   values.profile_photo = imgRes[0].fileUrl;
-      // }
-    }
-
-    await updateUser({
-      name: values.name,
-      path: pathname,
-      username: values.username,
-      userId: user.id,
-      bio: values.bio,
-      image: values.profile_photo,
-    });
-
-    if (pathname === "/profile/edit") {
-      router.back();
-    } else {
-      router.push("/");
+    try {
+      setIsSubmitLoading(true);
+      const blob = values.profile_photo;
+  
+      const hasImageChanged = isBase64Image(blob);
+  
+      if (hasImageChanged) {
+        const imgRes = await startUpload(files);
+        if (imgRes && imgRes[0].url) { 
+          values.profile_photo = imgRes[0].url;
+        }
+        console.log('imgRes', imgRes);
+      }
+  
+      await updateUser({
+        name: values.name,
+        path: pathname,
+        username: values.username,
+        userId: user.id,
+        bio: values.bio,
+        image: values.profile_photo,
+      });
+  
+      if (pathname === "/profile/edit") {
+        router.back();
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error('Error in onboarding submit', error);
+    } finally {
+      setIsSubmitLoading(false);
     }
   };
 
@@ -209,7 +219,11 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
           )}
         />
 
-        <Button type='submit' className='bg-primary-500'>
+        <Button disabled={isSubmitLoading} type='submit' className='bg-primary-500'>
+          {
+            isSubmitLoading &&
+            <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+          }
           {btnTitle}
         </Button>
       </form>
