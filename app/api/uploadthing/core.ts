@@ -1,6 +1,5 @@
 import { currentUser } from "@clerk/nextjs";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { UploadThingError } from "uploadthing/server";
 
 const f = createUploadthing();
 
@@ -16,7 +15,7 @@ export const ourFileRouter = {
    
          if (!user) {
             // Handle unauthorized user
-            throw new UploadThingError("Unauthorized");
+            throw new Error("Unauthorized");
          }
    
          return { userId: user.id };
