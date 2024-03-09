@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useOrganization } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 import {
   Form,
@@ -19,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { ThreadValidation } from "@/lib/validations/thread";
 import { createThread } from "@/lib/actions/thread.actions";
+import { ReloadIcon } from "@radix-ui/react-icons";
 
 interface Props {
   userId: string;
@@ -27,6 +29,7 @@ interface Props {
 function PostThread({ userId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isCreateThreadLoading, setIsCreateThreadLoading] = useState(false);
 
   const { organization } = useOrganization();
 
@@ -39,14 +42,21 @@ function PostThread({ userId }: Props) {
   });
 
   const onSubmit = async (values: z.infer<typeof ThreadValidation>) => {
-    await createThread({
-      text: values.thread,
-      author: userId,
-      communityId: organization ? organization.id : null,
-      path: pathname,
-    });
-
-    router.push("/");
+    try {
+      setIsCreateThreadLoading(true);
+      await createThread({
+        text: values.thread,
+        author: userId,
+        communityId: organization ? organization.id : null,
+        path: pathname,
+      });
+  
+      router.push("/");
+    } catch (error) {
+      console.error('Error occurred in creating thread', error);
+    } finally {
+      setIsCreateThreadLoading(false);
+    }
   };
 
   return (
@@ -71,7 +81,10 @@ function PostThread({ userId }: Props) {
           )}
         />
 
-        <Button type='submit' className='bg-primary-500'>
+        <Button type='submit' className='bg-primary-500' disabled={isCreateThreadLoading}>
+          {isCreateThreadLoading && (
+            <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Post Thread
         </Button>
       </form>
